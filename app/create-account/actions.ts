@@ -1,13 +1,24 @@
 "use server";
 import {z} from "zod";
 
-// const usernameSchema = z.string().min(5).max(10);
+const checkUsername = (username:string) => !username.includes("potato");
+
+const checkPasswords = ({ password, confirm_password } : { password: string, confirm_password: string }) => password === confirm_password;
+
 const formSchema = z.object({
-  username: z.string().min(3).max(10),
+  username: z.string({
+    invalid_type_error: "username must be a string",
+    required_error: "username is required"
+  }).min(3, "짧아")
+  .max(10, "길어")
+  .refine(checkUsername, "potato is not allowed"),
   email: z.string().email(),
   password: z.string().min(10),
   confirm_password: z.string().min(10),
-})
+}).refine(checkPasswords, {
+  message: "passwords do not match",
+  path: ["confirm_password"]
+});
 
 export async function createAccount(prevState:any, formData:FormData) {
 
@@ -22,7 +33,6 @@ export async function createAccount(prevState:any, formData:FormData) {
   const result = formSchema.safeParse(data);
 
   if(!result.success) {
-    console.log(result.error.flatten());
     return result.error.flatten();
   }
 
