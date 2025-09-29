@@ -3,6 +3,9 @@ import { PASSWORD_MIN_LENGTH, PASSWORD_REGEX, PASSWORD_REGEX_ERROR } from "@/lib
 import db from "@/lib/db";
 import { z } from "zod";
 import bcrypt from "bcrypt";
+import { getIronSession } from "iron-session";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 const checkPasswords = ({ password, confirm_password }: { password: string, confirm_password: string }) => password === confirm_password;
 
@@ -79,6 +82,18 @@ export async function createAccount(prevState: any, formData: FormData) {
         id: true
       }
     });
+
+    const cookieStore = await cookies();
+    const cookie = await getIronSession(cookieStore, {
+      cookieName: "delicious-carrot",
+      password: process.env.COOKIE_PASSWORD!
+    });
+
+    //@ts-ignore
+    cookie.id = user.id;
+    await cookie.save();
+
+    redirect("/profile");
 
   }
 
