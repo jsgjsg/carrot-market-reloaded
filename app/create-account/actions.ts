@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import getSession from "@/lib/session";
 
 const checkPasswords = ({ password, confirm_password }: { password: string, confirm_password: string }) => password === confirm_password;
 
@@ -83,15 +84,10 @@ export async function createAccount(prevState: any, formData: FormData) {
       }
     });
 
-    const cookieStore = await cookies();
-    const cookie = await getIronSession(cookieStore, {
-      cookieName: "delicious-carrot",
-      password: process.env.COOKIE_PASSWORD!
-    });
+    const session = await getSession();
 
-    //@ts-ignore
-    cookie.id = user.id;
-    await cookie.save();
+    session.id = user.id;
+    await session.save();
 
     redirect("/profile");
 
